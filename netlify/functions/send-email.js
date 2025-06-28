@@ -5,23 +5,23 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export const handler = async (event) => {
   // This is the important part for security (CORS)
   const headers = {
-    'Access-Control-Allow-Origin': '*', // Or lock it down to your specific app URL
+    'Access-Control-Allow-Origin': '*', // Allows any origin to access
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS'
   };
 
-  // Handle the browser's pre-flight "OPTIONS" request
+  // Handle the browser's pre-flight "OPTIONS" request, which checks permissions
   if (event.httpMethod === 'OPTIONS') {
     return {
-      statusCode: 204,
+      statusCode: 204, // No Content
       headers
     };
   }
   
-  // We only allow POST requests for security
+  // We only allow POST requests for the actual sending
   if (event.httpMethod !== 'POST') {
     return {
-      statusCode: 405,
+      statusCode: 405, // Method Not Allowed
       headers,
       body: JSON.stringify({ error: 'Method Not Allowed' }),
     };
