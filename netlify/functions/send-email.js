@@ -1,13 +1,28 @@
 import { Resend } from 'resend';
 
-// The API key is safely stored in Netlify, not in your code
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const handler = async (event) => {
+  // This is the important part for security (CORS)
+  const headers = {
+    'Access-Control-Allow-Origin': '*', // Or lock it down to your specific app URL
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+  };
+
+  // Handle the browser's pre-flight "OPTIONS" request
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 204,
+      headers
+    };
+  }
+  
   // We only allow POST requests for security
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
+      headers,
       body: JSON.stringify({ error: 'Method Not Allowed' }),
     };
   }
@@ -16,7 +31,7 @@ export const handler = async (event) => {
     const { to, subject, html } = JSON.parse(event.body);
 
     const { data, error } = await resend.emails.send({
-      from: 'Reading Companion <onboarding@resend.dev>', // This is a default from Resend
+      from: 'Reading Companion <onboarding@resend.dev>',
       to: to,
       subject: subject,
       html: html,
@@ -25,18 +40,21 @@ export const handler = async (event) => {
     if (error) {
       return {
         statusCode: 400,
+        headers,
         body: JSON.stringify(error)
       };
     }
 
     return {
       statusCode: 200,
+      headers,
       body: JSON.stringify(data)
     };
 
   } catch (error) {
     return {
       statusCode: 500,
+      headers,
       body: JSON.stringify({ error: 'Error sending email' })
     };
   }
